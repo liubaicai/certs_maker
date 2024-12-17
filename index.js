@@ -5,7 +5,7 @@
  */
 
 const app = require("./src/app");
-const debug = require("debug")("express_startkit:server");
+const debug = require("debug")("certs_maker:server");
 const http = require("http");
 const mkcertManager = require("./src/utils/mkcert");
 
