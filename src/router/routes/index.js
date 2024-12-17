@@ -74,4 +74,14 @@ router.get("/download-key/:domain", async function (req, res, next) {
   }
 });
 
+router.post("/delete-cert/:domain", async function (req, res, next) {
+  try {
+    const { domain } = req.params;
+    await mkcertManager.deleteCert(domain);
+    res.redirect('/');
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

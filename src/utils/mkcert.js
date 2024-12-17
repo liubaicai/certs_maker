@@ -184,6 +184,17 @@ class MkcertManager {
             throw new Error(`Certificate files for ${domain} not found`);
         }
     }
+
+    async deleteCert(domain) {
+        try {
+            const certDir = path.join(this.certsDir, domain);
+            await fs.rm(certDir, { recursive: true, force: true });
+            return true;
+        } catch (error) {
+            console.error(`Failed to delete certificate for ${domain}:`, error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new MkcertManager();

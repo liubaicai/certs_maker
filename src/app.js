@@ -3,13 +3,9 @@ const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const lessMiddleware = require("less-middleware");
 const logger = require("morgan");
-const fileUpload = require('express-fileupload');
 
 const router = require("./router/index");
-
-const publicPath = path.join(__dirname, "../public");
 
 const environment = process.env.NODE_ENV || "development";
 const isDevelopment = environment === "development";
@@ -20,7 +16,6 @@ if (isDevelopment) {
   const livereload = require("livereload");
   const connectLivereload = require("connect-livereload");
   const liveReloadServer = livereload.createServer();
-  liveReloadServer.watch(publicPath);
   liveReloadServer.server.once("connection", (e) => {
     setTimeout(() => {
       liveReloadServer.refresh("*");
@@ -38,12 +33,6 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(lessMiddleware(publicPath));
-app.use(express.static(publicPath));
-app.use(fileUpload({
-  createParentPath: true,
-  useTempFiles: true
-}));
 
 app.use(router);
 

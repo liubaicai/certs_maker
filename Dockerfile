@@ -26,10 +26,13 @@ RUN wget -O /usr/local/bin/mkcert https://github.com/FiloSottile/mkcert/releases
 # 设置 npm 镜像
 RUN npm config set registry http://registry.npmmirror.com
 
-# 复制项目文件
+# 复制 package.json 和 package-lock.json（如果存在）
 COPY package*.json ./
-RUN npm install
 
+# 只安装生产依赖
+RUN npm install --omit=dev
+
+# 复制项目文件
 COPY . .
 
 # 创建 certs 目录
