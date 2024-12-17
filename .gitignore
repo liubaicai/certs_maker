@@ -25,3 +25,5 @@ pnpm-debug.log*
 
 # mkcert
 tmp
+certs
+!certs/.gitkeep

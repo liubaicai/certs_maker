@@ -132,7 +132,7 @@ class MkcertManager {
             // 读取所有证书目录
             const dirs = await fs.readdir(this.certsDir);
             
-            // 获取每个目录的证书信息
+            // 获取每个目录的证书信息和创建时间
             const certs = await Promise.all(
                 dirs.map(async (dir) => {
                     const certPath = path.join(this.certsDir, dir, 'cert.pem');
@@ -145,20 +145,28 @@ class MkcertManager {
                             fs.access(keyPath)
                         ]);
                         
+                        // 获取证书文件的创建时间
+                        const stat = await fs.stat(certPath);
+                        
                         return {
                             domain: dir,
-                            exists: true
+                            exists: true,
+                            createdAt: stat.birthtime
                         };
                     } catch (error) {
                         return {
                             domain: dir,
-                            exists: false
+                            exists: false,
+                            createdAt: new Date(0)
                         };
                     }
                 })
             );
             
-            return certs.filter(cert => cert.exists);
+            // 过滤有效证书并按创建时间倒序排序
+            return certs
+                .filter(cert => cert.exists)
+                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         } catch (error) {
             console.error('Failed to list certificates:', error);
             return [];
