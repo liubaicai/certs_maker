@@ -25,9 +25,9 @@ app.set("host", host);
 async function startServer() {
   const hasMkcert = await mkcertManager.checkMkcertExists();
   if (!hasMkcert) {
-      console.error("Error: mkcert is required but not installed.");
-      console.error("Please install mkcert first: https://github.com/FiloSottile/mkcert#installation");
-      process.exit(1);
+      console.error("\x1b[31mError: mkcert is required but not installed.\x1b[0m");
+      console.error("\x1b[31mPlease install mkcert first: https://github.com/FiloSottile/mkcert#installation\x1b[0m");
+      // process.exit(1);
   }
 
   const server = http.createServer(app);
