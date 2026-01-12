@@ -180,13 +180,11 @@
 
     * {
         box-sizing: border-box;
-        margin: 0;
-        padding: 0;
     }
 
     body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         background: linear-gradient(135deg, var(--gray-950) 0%, var(--gray-900) 50%, var(--gray-850) 100%);
         background-attachment: fixed;
         min-height: 100vh;
@@ -212,6 +210,7 @@
         top: 0;
         z-index: 100;
         box-shadow: var(--shadow-md);
+        will-change: backdrop-filter;
     }
 
     .header-content {
@@ -270,6 +269,7 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: backdrop-filter;
     }
 
     .status-card::before {
@@ -384,6 +384,7 @@
         border-radius: var(--radius);
         border: 1px solid var(--gray-700);
         box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        will-change: backdrop-filter;
     }
 
     .command-label {
@@ -397,7 +398,7 @@
 
     .command-box code {
         color: var(--primary-light);
-        font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
         font-size: 0.9375rem;
         text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
     }
@@ -456,6 +457,7 @@
         border: 1px solid rgba(148, 163, 184, 0.15);
         box-shadow: var(--shadow-md);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: backdrop-filter;
     }
 
     .panel:hover {
@@ -611,6 +613,7 @@
         border-radius: var(--radius);
         border: 1px solid rgba(148, 163, 184, 0.15);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: backdrop-filter;
     }
 
     .cert-item:hover {
