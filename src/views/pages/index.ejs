@@ -1,855 +1,536 @@
 <body>
-    <div class="app-container">
+    <div class="app-shell">
         <header class="app-header">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="bi bi-shield-lock-fill"></i>
-                    <span><%= title %></span>
+            <div class="header-inner">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <span class="brand-name"><%= title %></span>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
-            <div class="container py-4">
-                <div class="row justify-content-center">
-                    <div class="col-12 col-xl-10">
-                        
-                        <div class="ca-status">
-                            <% if (!caStatus.initialized) { %>
-                                <div class="status-card warning">
-                                    <div class="status-icon">
-                                        <i class="bi bi-exclamation-triangle-fill"></i>
-                                    </div>
-                                    <div class="status-content">
-                                        <h2>CA Not Configured</h2>
-                                        <p>Your system needs a local Certificate Authority (CA) configuration.</p>
-                                        <div class="command-box">
-                                            <span class="command-label">Run this command in your terminal:</span>
-                                            <code>mkcert -install</code>
-                                        </div>
-                                    </div>
+            <div class="container-width">
+                
+                <!-- CA Status Section -->
+                <div class="section mb-8">
+                    <% if (!caStatus.initialized) { %>
+                        <div class="state-card warning">
+                            <div class="state-icon">
+                                <i class="bi bi-exclamation-octagon"></i>
+                            </div>
+                            <div class="state-body">
+                                <h3>CA Configuration Required</h3>
+                                <p>To generate trusted certificates, you must install the local Certificate Authority.</p>
+                                <div class="code-snippet">
+                                    <code>mkcert -install</code>
+                                    <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('mkcert -install')" title="Copy">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
                                 </div>
-                            <% } else { %>
-                                <div class="status-card success">
-                                    <div class="status-icon">
-                                        <i class="bi bi-check-circle-fill"></i>
-                                    </div>
-                                    <div class="status-content">
-                                        <h2>CA Configured</h2>
-                                        <p>Your local Certificate Authority is properly configured.</p>
-                                        <div class="status-actions">
-                                            <a href="/download-ca" class="btn-download" download>
-                                                <i class="bi bi-download"></i>
-                                                <span>Download CA Certificate</span>
-                                            </a>
-                                            <span class="help-text">
-                                                <i class="bi bi-info-circle"></i>
-                                                Install this certificate to trust all certificates signed by this CA.
-                                            </span>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="state-card success">
+                            <div class="state-header">
+                                <div class="state-indicator connected">
+                                    <span class="dot"></span>
+                                    Local CA Active
                                 </div>
+                                <a href="/download-ca" class="btn btn-secondary btn-sm">
+                                    <i class="bi bi-download"></i>
+                                    Root Certificate
+                                </a>
+                            </div>
+                            <p class="state-desc">Your system is ready to generate locally trusted certificates.</p>
+                        </div>
+                    <% } %>
+                </div>
+
+                <% if (caStatus.initialized) { %>
+                    <!-- Generator Section -->
+                    <div class="section mb-8">
+                        <form action="/generate-cert" method="POST" class="generate-form">
+                            <div class="form-group">
+                                <label for="domain">New Certificate</label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="domain" name="domain" required 
+                                           placeholder="e.g. localhost, 127.0.0.1, mysite.local" autocomplete="off">
+                                    <button type="submit" class="btn btn-primary">
+                                        Generate
+                                    </button>
+                                </div>
+                                <span class="input-hint">Enter a domain name or IP address</span>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Certificates List -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Certificates</h3>
+                            <% if (certs && certs.length > 0) { %>
+                                <span class="badge"><%= certs.length %></span>
                             <% } %>
                         </div>
 
-                        <% if (caStatus.initialized) { %>
-                            <div class="cert-manager">
-                                <div class="panel generate-panel">
-                                    <div class="panel-header">
-                                        <i class="bi bi-plus-circle-fill"></i>
-                                        <h2>Generate Certificate</h2>
-                                    </div>
-                                    <div class="panel-body">
-                                        <form action="/generate-cert" method="POST" class="generate-form">
-                                            <div class="form-row">
-                                                <div class="input-group">
-                                                    <label for="domain">Domain or IP</label>
-                                                    <input type="text" id="domain" name="domain" required 
-                                                           placeholder="example.com or 192.168.1.1">
-                                                </div>
-                                                <button type="submit" class="btn-generate">
-                                                    <i class="bi bi-shield-lock-fill"></i>
-                                                    <span>Generate</span>
+                        <% if (certs && certs.length > 0) { %>
+                            <div class="cert-grid">
+                                <% certs.forEach(cert => { %>
+                                    <div class="cert-card">
+                                        <div class="cert-main">
+                                            <div class="cert-icon">
+                                                <i class="bi bi-globe"></i>
+                                            </div>
+                                            <div class="cert-details">
+                                                <span class="cert-name"><%= cert.domain %></span>
+                                                <span class="cert-type">Local Certificate</span>
+                                            </div>
+                                        </div>
+                                        <div class="cert-actions">
+                                            <div class="btn-group">
+                                                <a href="/download-cert/<%= cert.domain %>" class="btn-icon" title="Download CRT">
+                                                    <i class="bi bi-file-earmark-check"></i>
+                                                    <span class="btn-label">CRT</span>
+                                                </a>
+                                                <a href="/download-key/<%= cert.domain %>" class="btn-icon" title="Download Key">
+                                                    <i class="bi bi-key"></i>
+                                                    <span class="btn-label">KEY</span>
+                                                </a>
+                                            </div>
+                                            <div class="divider"></div>
+                                            <form action="/delete-cert/<%= cert.domain %>" method="POST" 
+                                                  onsubmit="return confirm('Revoke <%= cert.domain %>?');">
+                                                <button type="submit" class="btn-icon danger" title="Revoke">
+                                                    <i class="bi bi-trash"></i>
                                                 </button>
-                                            </div>
-                                        </form>
+                                            </form>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div class="panel certs-panel">
-                                    <div class="panel-header secondary">
-                                        <i class="bi bi-collection-fill"></i>
-                                        <h2>Generated Certificates</h2>
-                                        <% if (certs && certs.length > 0) { %>
-                                            <span class="badge"><%= certs.length %></span>
-                                        <% } %>
-                                    </div>
-                                    <div class="panel-body">
-                                        <% if (certs && certs.length > 0) { %>
-                                            <div class="cert-list">
-                                                <% certs.forEach(cert => { %>
-                                                    <div class="cert-item">
-                                                        <div class="cert-info">
-                                                            <i class="bi bi-globe2"></i>
-                                                            <span class="cert-domain"><%= cert.domain %></span>
-                                                        </div>
-                                                        <div class="cert-actions">
-                                                            <a href="/download-cert/<%= cert.domain %>" 
-                                                               class="action-btn cert-btn" title="Download Certificate">
-                                                                <i class="bi bi-file-earmark-lock2"></i>
-                                                                <span>Cert</span>
-                                                            </a>
-                                                            <a href="/download-key/<%= cert.domain %>" 
-                                                               class="action-btn key-btn" title="Download Private Key">
-                                                                <i class="bi bi-key-fill"></i>
-                                                                <span>Key</span>
-                                                            </a>
-                                                            <form action="/delete-cert/<%= cert.domain %>" 
-                                                                  method="POST" 
-                                                                  class="delete-form"
-                                                                  onsubmit="return confirm('Delete certificate for <%= cert.domain %>?');">
-                                                                <button type="submit" class="action-btn delete-btn" title="Delete">
-                                                                    <i class="bi bi-trash3-fill"></i>
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                <% }); %>
-                                            </div>
-                                        <% } else { %>
-                                            <div class="empty-state">
-                                                <i class="bi bi-inbox"></i>
-                                                <p>No certificates generated yet</p>
-                                                <span>Create your first certificate above</span>
-                                            </div>
-                                        <% } %>
-                                    </div>
-                                </div>
+                                <% }); %>
+                            </div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <p>No certificates created yet.</p>
                             </div>
                         <% } %>
                     </div>
-                </div>
+                <% } %>
+                
             </div>
         </main>
+        
+        <footer class="app-footer">
+            <p>Ready for local development</p>
+        </footer>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
+    /* Reset & Base */
     :root {
-        --primary: #06b6d4;
-        --primary-light: #22d3ee;
-        --primary-dark: #0891b2;
-        --primary-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-        --accent: #8b5cf6;
-        --accent-light: #a78bfa;
-        --success: #10b981;
-        --success-light: #34d399;
-        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        --warning: #f59e0b;
-        --warning-light: #fbbf24;
-        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        --danger: #ef4444;
-        --danger-light: #f87171;
-        --gray-50: #f8fafc;
-        --gray-100: #f1f5f9;
-        --gray-200: #e2e8f0;
-        --gray-300: #cbd5e1;
-        --gray-400: #94a3b8;
-        --gray-500: #64748b;
-        --gray-600: #475569;
-        --gray-700: #334155;
-        --gray-800: #1e293b;
-        --gray-850: #172033;
-        --gray-900: #0f172a;
-        --gray-950: #020617;
-        --radius-sm: 8px;
-        --radius: 12px;
-        --radius-lg: 16px;
-        --radius-xl: 24px;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-        --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-        --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.1);
-        --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.1);
-        --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.25);
-        --glow-primary: 0 0 20px rgba(6, 182, 212, 0.3);
-        --glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
-        --glow-warning: 0 0 20px rgba(245, 158, 11, 0.3);
+        --bg-body: #FAFAFA;
+        --bg-surface: #FFFFFF;
+        --border-color: #E4E4E7; /* Zinc 200 */
+        --border-hover: #D4D4D8; /* Zinc 300 */
+        
+        --text-primary: #18181B; /* Zinc 900 */
+        --text-secondary: #71717A; /* Zinc 500 */
+        --text-tertiary: #A1A1AA; /* Zinc 400 */
+        
+        --primary: #18181B;
+        --primary-hover: #27272A;
+        
+        --danger: #EF4444;
+        --success: #10B981;
+        --warning: #F59E0B;
+        
+        --radius: 8px;
+        --radius-sm: 6px;
+        
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
     }
-
-    * {
-        box-sizing: border-box;
-    }
-
+    
+    * { box-sizing: border-box; }
+    
     body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        background: linear-gradient(135deg, var(--gray-950) 0%, var(--gray-900) 50%, var(--gray-850) 100%);
-        background-attachment: fixed;
-        min-height: 100vh;
-        color: var(--gray-200);
+        font-family: var(--font-sans);
+        background-color: var(--bg-body);
+        color: var(--text-primary);
+        line-height: 1.5;
         -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        line-height: 1.6;
     }
-
-    .app-container {
+    
+    /* Layout */
+    .app-shell {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
     }
-
-    .app-header {
-        background: rgba(30, 41, 59, 0.8);
-        backdrop-filter: blur(12px) saturate(180%);
-        -webkit-backdrop-filter: blur(12px) saturate(180%);
-        padding: 1rem 0;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: var(--shadow-md);
-    }
-
-    .header-content {
-        max-width: 1200px;
+    
+    .container-width {
+        width: 100%;
+        max-width: 640px;
         margin: 0 auto;
         padding: 0 1.5rem;
     }
-
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 0.875rem;
-        color: var(--primary-light);
-        font-size: 1.375rem;
-        font-weight: 700;
-        letter-spacing: -0.03em;
+    
+    /* Header */
+    .app-header {
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 0;
+        margin-bottom: 3rem;
     }
-
-    .logo i {
-        font-size: 1.75rem;
-        filter: drop-shadow(var(--glow-primary));
-        animation: pulse-glow 3s ease-in-out infinite;
-    }
-
-    @keyframes pulse-glow {
-        0%, 100% {
-            filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
-        }
-        50% {
-            filter: drop-shadow(0 0 16px rgba(6, 182, 212, 0.6));
-        }
-    }
-
-    .logo span {
-        background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent-light) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .main-content {
-        flex: 1;
-        padding: 1.5rem 0;
-    }
-
-    /* Status Cards */
-    .status-card {
-        display: flex;
-        gap: 1.5rem;
-        padding: 1.75rem;
-        border-radius: var(--radius-lg);
-        margin-bottom: 2rem;
-        border: 1px solid;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .status-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, currentColor, transparent);
-        opacity: 0.5;
-    }
-
-    .status-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .status-card.success {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: rgba(16, 185, 129, 0.3);
-        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
-    }
-
-    .status-card.success::before {
-        color: var(--success);
-    }
-
-    .status-card.warning {
-        background: rgba(245, 158, 11, 0.1);
-        border-color: rgba(245, 158, 11, 0.3);
-        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
-    }
-
-    .status-card.warning::before {
-        color: var(--warning);
-    }
-
-    .status-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: var(--radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.625rem;
-        flex-shrink: 0;
-        position: relative;
-    }
-
-    .status-icon::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: var(--radius);
-        background: inherit;
-        filter: blur(12px);
-        opacity: 0.4;
-        z-index: -1;
-    }
-
-    .status-card.success .status-icon {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15));
-        color: var(--success-light);
-        animation: icon-pulse-success 2s ease-in-out infinite;
-    }
-
-    .status-card.warning .status-icon {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.15));
-        color: var(--warning-light);
-        animation: icon-pulse-warning 2s ease-in-out infinite;
-    }
-
-    @keyframes icon-pulse-success {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-        50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-    }
-
-    @keyframes icon-pulse-warning {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-        50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
-    }
-
-    .status-content h2 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.125rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
-
-    .status-card.success .status-content h2 {
-        color: var(--success);
-    }
-
-    .status-card.warning .status-content h2 {
-        color: var(--warning);
-    }
-
-    .status-content p {
-        margin: 0;
-        font-size: 0.9375rem;
-        color: var(--gray-400);
-        line-height: 1.6;
-    }
-
-    .command-box {
-        margin-top: 1.25rem;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        padding: 1rem 1.25rem;
-        border-radius: var(--radius);
-        border: 1px solid var(--gray-700);
-        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-    }
-
-    .command-label {
-        display: block;
-        font-size: 0.7rem;
-        color: var(--gray-500);
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .command-box code {
-        color: var(--primary-light);
-        font-family: Monaco, Consolas, 'Courier New', monospace;
-        font-size: 0.9375rem;
-        text-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
-    }
-
-    .status-actions {
-        margin-top: 1rem;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .btn-download {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem 1.125rem;
-        background: var(--success-gradient);
-        color: white;
-        border-radius: var(--radius);
-        text-decoration: none;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-download:hover {
-        background: var(--success-light);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35), var(--glow-success);
-    }
-
-    .btn-download:active {
-        transform: translateY(0);
-    }
-
-    .help-text {
-        display: flex;
-        align-items: center;
-        gap: 0.375rem;
-        font-size: 0.75rem;
-        color: var(--gray-500);
-    }
-
-    /* Panels */
-    .panel {
-        background: rgba(30, 41, 59, 0.6);
-        backdrop-filter: blur(12px) saturate(180%);
-        -webkit-backdrop-filter: blur(12px) saturate(180%);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        margin-bottom: 2rem;
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        box-shadow: var(--shadow-md);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .panel:hover {
-        border-color: rgba(148, 163, 184, 0.25);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .panel-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1.125rem 1.5rem;
-        background: rgba(15, 23, 42, 0.4);
-        color: var(--primary-light);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-    }
-
-    .panel-header.secondary {
-        color: var(--gray-300);
-    }
-
-    .panel-header i {
-        font-size: 1rem;
-        opacity: 0.9;
-    }
-
-    .panel-header h2 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
-
-    .panel-header .badge {
-        margin-left: auto;
-        background: var(--primary-gradient);
-        color: white;
-        padding: 0.25rem 0.625rem;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
-    }
-
-    .panel-body {
-        padding: 1.5rem;
-    }
-
-    /* Generate Form */
-    .form-row {
-        display: flex;
-        gap: 1rem;
-        align-items: flex-end;
-    }
-
-    .input-group {
-        flex: 1;
-        max-width: 400px;
-    }
-
-    .input-group label {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--gray-300);
-        margin-bottom: 0.625rem;
-        text-transform: uppercase;
-        letter-spacing: 0.075em;
-    }
-
-    .input-group input {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 2px solid var(--gray-700);
-        border-radius: var(--radius);
-        font-size: 0.9375rem;
-        font-family: inherit;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(15, 23, 42, 0.5);
-        color: var(--gray-100);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .input-group input:focus {
-        outline: none;
-        border-color: var(--primary);
-        background: rgba(15, 23, 42, 0.7);
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2);
-        transform: translateY(-1px);
-    }
-
-    .input-group input::placeholder {
-        color: var(--gray-500);
-    }
-
-    .btn-generate {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--primary-gradient);
-        color: white;
-        border: none;
-        border-radius: var(--radius);
-        font-size: 0.9375rem;
-        font-weight: 700;
-        font-family: inherit;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-generate::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transform: translateX(-100%);
-        transition: transform 0.6s;
-    }
-
-    .btn-generate:hover::before {
-        transform: translateX(100%);
-    }
-
-    .btn-generate:hover {
-        background: var(--primary-light);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4), var(--glow-primary);
-    }
-
-    .btn-generate:active {
-        transform: translateY(0);
-    }
-
-    /* Certificate List */
-    .cert-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .cert-item {
+    
+    .header-inner {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 1.25rem;
-        background: rgba(15, 23, 42, 0.5);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: var(--radius);
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    .cert-item:hover {
-        border-color: rgba(148, 163, 184, 0.3);
-        background: rgba(15, 23, 42, 0.7);
-        transform: translateX(4px);
-        box-shadow: var(--shadow-md);
-    }
-
-    .cert-info {
+    
+    .brand {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        min-width: 0;
     }
-
-    .cert-info i {
-        color: var(--primary-light);
-        font-size: 1.125rem;
-        flex-shrink: 0;
-        filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
-    }
-
-    .cert-domain {
-        font-weight: 600;
-        color: var(--gray-100);
-        word-break: break-all;
-        font-size: 0.9375rem;
-    }
-
-    .cert-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-
-    .action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.875rem;
-        border-radius: var(--radius-sm);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        font-family: inherit;
-        text-decoration: none;
-        border: 1px solid;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .action-btn::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: currentColor;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .action-btn:hover::before {
-        opacity: 0.1;
-    }
-
-    .cert-btn {
-        background: rgba(6, 182, 212, 0.15);
-        color: var(--primary-light);
-        border-color: rgba(6, 182, 212, 0.3);
-    }
-
-    .cert-btn:hover {
+    
+    .brand-icon {
+        width: 32px;
+        height: 32px;
         background: var(--primary);
         color: white;
-        border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
-        transform: translateY(-2px);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
     }
-
-    .key-btn {
-        background: rgba(245, 158, 11, 0.15);
-        color: var(--warning-light);
-        border-color: rgba(245, 158, 11, 0.3);
-    }
-
-    .key-btn:hover {
-        background: var(--warning);
-        color: white;
-        border-color: var(--warning);
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        transform: translateY(-2px);
-    }
-
-    .delete-btn {
-        background: transparent;
-        color: var(--gray-400);
-        border-color: var(--gray-600);
-        padding: 0.5rem;
-    }
-
-    .delete-btn:hover {
-        background: var(--danger);
-        color: white;
-        border-color: var(--danger);
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-        transform: translateY(-2px);
-    }
-
-    .delete-form {
-        margin: 0;
-        padding: 0;
-        display: inline-flex;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: var(--gray-500);
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-        display: block;
-        animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-
-    .empty-state p {
-        margin: 0;
+    
+    .brand-name {
+        font-weight: 600;
         font-size: 1rem;
-        color: var(--gray-400);
+        letter-spacing: -0.01em;
+    }
+    
+    .main-content {
+        flex: 1;
+    }
+    
+    .mb-8 { margin-bottom: 2.5rem; }
+    
+    /* Sections */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .badge {
+        background-color: var(--border-color);
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 99px;
         font-weight: 600;
     }
-
-    .empty-state span {
+    
+    /* Status Cards */
+    .state-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-xs);
+    }
+    
+    .state-card.warning {
+        border-left: 4px solid var(--warning);
+    }
+    
+    .state-card.success {
+        /* border-left: 4px solid var(--success); */
+    }
+    
+    .state-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .state-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.9375rem;
+    }
+    
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--success);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    .state-desc {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .code-snippet {
+        background: var(--bg-body);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+    
+    .code-snippet code {
+        font-family: 'SF Mono', 'Monaco', monospace;
+        font-size: 0.875rem;
+        color: var(--text-primary);
+    }
+    
+    .copy-btn {
+        background: none;
+        border: none;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    
+    .copy-btn:hover { color: var(--text-primary); }
+    
+    /* Forms */
+    .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .input-wrapper input {
+        flex: 1;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.9375rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .input-wrapper input:focus {
+        outline: none;
+        border-color: var(--text-tertiary);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: var(--radius);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: 1px solid var(--primary);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: white;
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+    
+    .btn-secondary:hover {
+        border-color: var(--border-hover);
+        color: var(--text-primary);
+        background: var(--bg-body);
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+    
+    .input-hint {
         display: block;
         margin-top: 0.5rem;
-        font-size: 0.875rem;
-        color: var(--gray-500);
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
     }
-
-    /* Responsive */
+    
+    /* Cert Grid */
+    .cert-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .cert-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: border-color 0.2s;
+    }
+    
+    .cert-card:hover {
+        border-color: var(--border-hover);
+    }
+    
+    .cert-main {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .cert-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--bg-body);
+        color: var(--text-secondary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+    }
+    
+    .cert-details {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .cert-name {
+        font-weight: 600;
+        font-size: 0.9375rem;
+        color: var(--text-primary);
+    }
+    
+    .cert-type {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+    }
+    
+    .cert-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.625rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .btn-icon:hover {
+        background: var(--bg-body);
+        color: var(--text-primary);
+    }
+    
+    .btn-icon.danger:hover {
+        background: #FEF2F2;
+        color: var(--danger);
+    }
+    
+    .divider {
+        width: 1px;
+        height: 24px;
+        background: var(--border-color);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-tertiary);
+        border: 1px dashed var(--border-color);
+        border-radius: var(--radius);
+    }
+    
+    .app-footer {
+        text-align: center;
+        padding: 2rem 0;
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+    }
+    
     @media (max-width: 640px) {
-        .form-row {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .input-group {
-            max-width: none;
-        }
-
-        .btn-generate {
-            justify-content: center;
-            width: 100%;
-        }
-
-        .cert-item {
+        .cert-card {
             flex-direction: column;
             align-items: flex-start;
             gap: 1rem;
         }
-
         .cert-actions {
             width: 100%;
-            justify-content: flex-start;
+            justify-content: space-between;
         }
-
-        .status-card {
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 1.5rem;
-        }
-
-        .action-btn span {
-            display: inline;
-        }
-
-        .action-btn {
-            flex: 1;
-            justify-content: center;
-        }
-
-        .logo {
-            font-size: 1.125rem;
-        }
-
-        .logo i {
-            font-size: 1.5rem;
-        }
-    }
-
-    /* Smooth scroll */
-    html {
-        scroll-behavior: smooth;
-    }
-
-    /* Respect user's motion preferences */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
-        
-        html {
-            scroll-behavior: auto;
-        }
-    }
-
-    /* Selection */
-    ::selection {
-        background: rgba(6, 182, 212, 0.3);
-        color: var(--gray-100);
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: var(--gray-900);
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: var(--gray-700);
-        border-radius: 5px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--gray-600);
     }
     </style>
 </body>

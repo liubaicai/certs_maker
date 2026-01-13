@@ -1,7 +1,28 @@
-<h1>
-    <%= message %>
-</h1>
-<h2>
-    <%= error.status %>
-</h2>
-<pre><%= error.stack %></pre>
+<div class="container py-5">
+    <div class="error-container">
+        <h1 class="display-1 fw-bold"><%= error.status || 500 %></h1>
+        <h2 class="h4 mb-4"><%= message %></h2>
+        <% if (error.stack) { %>
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <pre class="mb-0 text-muted" style="font-size: 0.875rem;"><code><%= error.stack %></code></pre>
+                </div>
+            </div>
+        <% } %>
+        <div class="mt-4">
+            <a href="/" class="btn btn-secondary">Go Home</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #FAFAFA;
+        color: #18181B;
+    }
+    .error-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+</style>
